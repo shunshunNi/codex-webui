@@ -751,3 +751,16 @@ body.sidebar-hidden .sidebar>div{opacity:0}
 @media(max-width:480px){.settings-card{display:block}.settings-nav,.settings-content{height:100%}.settings-nav{border-right:0;padding-inline:12px}.settings-nav-toolbar-spacer{height:10px;flex-basis:10px}.settings-content{display:none}.settings-dialog[data-mobile-page="true"] .settings-nav{display:none}.settings-dialog[data-mobile-page="true"] .settings-content{display:block}.settings-dialog[data-mobile-page="true"] .settings-mobile-back{display:inline-grid!important}.settings-page{width:100%;padding:24px 20px 36px}.settings-page-heading{margin-bottom:22px}.settings-row:not(.settings-toggle-row)>span:last-child{max-width:52%}}
 
 .sidebar-project-heading{display:flex;align-items:center}.sidebar-project-heading .sidebar-project-row{flex:1;min-width:0}.sidebar-project-new{flex:none;width:28px;height:28px}
+
+.composer-image-chip{position:relative;flex:none;width:72px;height:72px}
+.composer-image-preview{display:block;width:100%;height:100%;padding:0;overflow:hidden;border:1px solid var(--app-border-default);border-radius:8px;background:var(--app-fog);cursor:pointer}
+.composer-image-preview img{display:block;width:100%;height:100%;object-fit:cover}
+.composer-image-remove{position:absolute;top:4px;right:4px;display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.7);color:#fff;cursor:pointer}
+.composer-image-remove:hover{background:#000}
+.composer-image-remove .icon-slot,.composer-image-remove .icon-slot>svg{width:12px;height:12px}
+
+.user-message-images{grid-template-columns:repeat(auto-fit,minmax(min(140px,100%),1fr));width:min(420px,100%);margin:0}
+.user-message-images:first-child{margin-top:0}
+.user-message-images .message-image{max-height:240px}
+
+.user-message-images + .user-message-text{margin-top:8px}
