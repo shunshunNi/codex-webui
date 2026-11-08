@@ -1,4 +1,4 @@
-import { createReadStream, existsSync, readFileSync } from "node:fs";
+import { createReadStream, existsSync, readFileSync, mkdirSync, writeFileSync, renameSync } from "node:fs";
 import { join, relative, resolve, extname } from "node:path";
 import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
@@ -517,6 +517,27 @@ const server = createServer(async (req, res) => {
   if (url.pathname === "/api/health") {
     res.writeHead(200, { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" });
     res.end(JSON.stringify({ ok: true, codex: connected, version: "0.2.0" }));
+    return;
+  }
+  if (url.pathname === "/api/model-preferences") {
+    const path = join(process.env.CODEX_HOME || join(homeDir, ".codex"), "codex-webui-model-preferences.json");
+    try {
+      let data: any = { default: null, threads: {} };
+      try { data = JSON.parse(readFileSync(path, "utf8")); } catch (error: any) { if (error?.code !== "ENOENT") throw error; }
+      if (!data || typeof data !== "object" || !data.threads || typeof data.threads !== "object") throw new Error("Invalid preferences file");
+      if (req.method === "POST") {
+        const payload = await readJsonBody(req, 4096);
+        if (typeof payload.model !== "string" || !payload.model || payload.model.length > 200 || typeof payload.effort !== "string" || !/^[a-z]+$/.test(payload.effort) || (payload.threadId != null && (typeof payload.threadId !== "string" || !/^[a-zA-Z0-9_-]{1,200}$/.test(payload.threadId)))) throw new Error("Invalid model preference");
+        const selection = { model: payload.model, effort: payload.effort };
+        if (payload.threadId) data.threads[payload.threadId] = selection; else data.default = selection;
+        mkdirSync(join(path, ".."), { recursive: true, mode: 0o700 });
+        const temporary = `${path}.${process.pid}.tmp`;
+        writeFileSync(temporary, JSON.stringify(data), { mode: 0o600 });
+        renameSync(temporary, path);
+      } else if (req.method !== "GET") { sendAuthError(res, 405, "Method not allowed"); return; }
+      res.writeHead(200, { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" });
+      res.end(JSON.stringify(req.method === "GET" ? { default: data.default, selection: data.threads[url.searchParams.get("threadId") || ""] || null } : { ok: true }));
+    } catch (error) { sendAuthError(res, 400, error instanceof Error ? error.message : "Unable to save preferences"); }
     return;
   }
   if (url.pathname === "/api/config") {
