@@ -38,6 +38,7 @@ try{
       return window.__composerOriginalFetch(resource,options);
     };
   });
+  const crossThread=await page.evaluate(()=>{const api=globalThis.__codexWebuiDebug;api.notify('item/started',{threadId:'other-thread',turnId:'other-turn',item:{id:'foreign-item',type:'agentMessage',text:'Foreign message'}});api.notify('turn/completed',{threadId:'other-thread',turn:{id:'other-turn',items:[{id:'foreign-completed',type:'agentMessage',text:'Foreign completed'}]}});return {started:api.state.items.has('foreign-item'),completed:api.state.items.has('foreign-completed')};});
   const stop=await page.evaluate(()=>({mode:document.querySelector('#sendButton')?.dataset.submitMode,title:document.querySelector('#sendButton')?.title,turnId:document.querySelector('#sendButton')?.dataset.turnId,stopped:document.querySelector('#sendButton')?.classList.contains('stop'),square:Boolean(document.querySelector('#sendButton rect[fill="currentColor"]'))}));
   await page.screenshot({path:artifact('composer-submit-stop.png'),fullPage:false});
   await page.locator('#prompt').fill('Change direction while this task is running.');
@@ -54,9 +55,9 @@ try{
   await page.click('#sendButton');
   await page.waitForFunction(()=>document.querySelector('#toast')?.classList.contains('show'));
   const conflict=await page.evaluate(()=>({input:document.querySelector('#prompt')?.value,toast:document.querySelector('#toast')?.textContent?.trim(),activeId:globalThis.__codexWebuiDebug.state.active?.id,calls:window.__composerRpcCalls.slice(window.__composerConflictCallStart).map(call=>call.method),mode:document.querySelector('#sendButton')?.dataset.submitMode}));
-  const result={stop,steer,afterSteer,interrupt,send,conflict,errors};
+  const result={crossThread,stop,steer,afterSteer,interrupt,send,conflict,errors};
   console.log(JSON.stringify(result,null,2));
-  if(errors.length||stop.mode!=='stop'||stop.title!=='Stop'||stop.turnId!=='composer-turn'||!stop.stopped||!stop.square||steer.mode!=='steer'||steer.title!=='Steer'||steer.stopped||!steer.arrow||afterSteer.input!==''||afterSteer.mode!=='stop'||afterSteer.call?.params?.threadId!=='composer-thread'||afterSteer.call?.params?.expectedTurnId!=='composer-turn'||afterSteer.call?.params?.input?.[0]?.text!=='Change direction while this task is running.'||interrupt.mode!=='stop'||interrupt.call?.params?.threadId!=='composer-thread'||interrupt.call?.params?.turnId!=='composer-turn'||send.mode!=='send'||send.title!=='Send message'||send.stopped||!send.arrow||conflict.input!=='Keep this message when the CLI owns the task.'||conflict.toast!=='This task is currently running in another Codex app or CLI. Close it there, then try again.'||conflict.activeId!=='external-thread'||JSON.stringify(conflict.calls)!==JSON.stringify(['thread/resume'])||conflict.mode!=='steer')process.exitCode=1;
+  if(errors.length||crossThread.started||crossThread.completed||stop.mode!=='stop'||stop.title!=='Stop'||stop.turnId!=='composer-turn'||!stop.stopped||!stop.square||steer.mode!=='steer'||steer.title!=='Steer'||steer.stopped||!steer.arrow||afterSteer.input!==''||afterSteer.mode!=='stop'||afterSteer.call?.params?.threadId!=='composer-thread'||afterSteer.call?.params?.expectedTurnId!=='composer-turn'||afterSteer.call?.params?.input?.[0]?.text!=='Change direction while this task is running.'||interrupt.mode!=='stop'||interrupt.call?.params?.threadId!=='composer-thread'||interrupt.call?.params?.turnId!=='composer-turn'||send.mode!=='send'||send.title!=='Send message'||send.stopped||!send.arrow||conflict.input!=='Keep this message when the CLI owns the task.'||conflict.toast!=='This task is currently running in another Codex app or CLI. Close it there, then try again.'||conflict.activeId!=='external-thread'||JSON.stringify(conflict.calls)!==JSON.stringify(['thread/resume'])||conflict.mode!=='steer')process.exitCode=1;
 }finally{
   await browser?.close();
   server.kill();
