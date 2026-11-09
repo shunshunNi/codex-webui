@@ -658,7 +658,7 @@ body.sidebar-hidden .sidebar>div{opacity:0}
 .thread-delete .icon-slot,.thread-delete svg{width:14px;height:14px}
 .thread-name{font-size:14px;line-height:20px}
 .thread-meta{display:none}
-.sidebar-footer{padding:0 8px;border-top:.5px solid color-mix(in srgb,var(--app-border) 70%,transparent)}
+.sidebar-footer{position:relative;padding:0 8px;border-top:.5px solid color-mix(in srgb,var(--app-border) 70%,transparent)}
 .sidebar-footer-row{height:46px;display:flex;align-items:center;gap:2px}
 .account-button{min-width:0;flex:1;height:30px;gap:8px;padding:0 8px;border-radius:10px;color:var(--app-text)}
 .account-button:hover,.account-button[aria-expanded=true]{background:var(--app-hover)}
@@ -764,3 +764,15 @@ body.sidebar-hidden .sidebar>div{opacity:0}
 .user-message-images .message-image{max-height:240px}
 
 .user-message-images + .user-message-text{margin-top:8px}
+
+ .account-usage-summary{position:static;flex:none}
+.account-usage-summary[hidden]{display:none}
+.account-usage-summary button{width:32px;height:32px;display:grid;place-items:center;border-radius:8px;color:var(--app-text-tertiary)}
+.account-usage-summary button:hover,.account-usage-summary button:focus-visible,.account-usage-summary.open button{background:var(--app-hover);color:var(--app-text)}
+.account-usage-summary svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round}
+.account-usage-summary .usage-track{opacity:.2}
+.account-usage-summary .usage-progress{stroke-dasharray:var(--usage-primary,0) 100}
+.account-usage-summary .usage-secondary{stroke-dasharray:var(--usage-secondary,0) 100}
+.account-usage-summary .usage-diamond{fill:currentColor;stroke:none;opacity:.65}
+.usage-details{display:none;position:absolute;z-index:80;bottom:44px;left:8px;right:8px;overflow-wrap:anywhere;padding:8px 10px;border:1px solid var(--app-border-default);border-radius:9px;background:var(--app-panel);box-shadow:var(--app-elevation-shadow);color:var(--app-text);font-size:12px;line-height:22px}
+.account-usage-summary:hover .usage-details,.account-usage-summary:focus-within .usage-details,.account-usage-summary.open .usage-details{display:block}
