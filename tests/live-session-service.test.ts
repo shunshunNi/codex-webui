@@ -7,6 +7,18 @@ import { LiveSessionStore, parseRollout } from "../live-session-service.js";
 const line = (type: string, payload: any, timestamp = "2026-08-11T06:26:25.000Z") => JSON.stringify({ timestamp, type, payload }) + "\n";
 
 describe("Desktop-style live session reader", () => {
+  test("stops exposing an interrupted turn, including after a fresh read", () => {
+    const directory = mkdtempSync(join(tmpdir(), "codex-live-session-"));
+    const path = join(directory, "rollout.jsonl");
+    try {
+      writeFileSync(path, line("event_msg", { type: "task_started", turn_id: "turn-1" }));
+      const store = new LiveSessionStore();
+      expect(store.read(path).active).toBe(true);
+      appendFileSync(path, line("event_msg", { type: "turn_aborted", turn_id: "turn-1", reason: "interrupted" }));
+      expect(store.read(path)).toMatchObject({ active: false, turn: null });
+      expect(new LiveSessionStore().read(path)).toMatchObject({ active: false, turn: null });
+    } finally { rmSync(directory, { recursive: true, force: true }); }
+  });
   test("reconstructs an active CLI command and its available output", () => {
     const input = [
       line("event_msg", { type: "task_started", turn_id: "turn-1", started_at: 10 }),
