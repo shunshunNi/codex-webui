@@ -776,3 +776,8 @@ body.sidebar-hidden .sidebar>div{opacity:0}
 .account-usage-summary .usage-diamond{fill:currentColor;stroke:none;opacity:.65}
 .usage-details{display:none;position:absolute;z-index:80;bottom:44px;left:8px;right:8px;overflow-wrap:anywhere;padding:8px 10px;border:1px solid var(--app-border-default);border-radius:9px;background:var(--app-panel);box-shadow:var(--app-elevation-shadow);color:var(--app-text);font-size:12px;line-height:22px}
 .account-usage-summary:hover .usage-details,.account-usage-summary:focus-within .usage-details,.account-usage-summary.open .usage-details{display:block}
+
+#toggleSidebar{position:absolute;left:8px;top:7px;z-index:1}
+.window-brand{padding-left:48px}
+@media(max-width:720px){.thread-heading{padding-left:48px}}
+.mobile-device .thread-heading{padding-left:48px}
