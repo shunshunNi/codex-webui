@@ -7,6 +7,19 @@ import { LiveSessionStore, parseRollout } from "../live-session-service.js";
 const line = (type: string, payload: any, timestamp = "2026-08-11T06:26:25.000Z") => JSON.stringify({ timestamp, type, payload }) + "\n";
 
 describe("Desktop-style live session reader", () => {
+  test("reconstructs asynchronous questions and subsequent user messages in order", () => {
+    const state = parseRollout([
+      line("event_msg", { type: "task_started", turn_id: "turn-question" }),
+      line("response_item", { type: "message", role: "user", content: [{ type: "input_text", text: "Start" }] }),
+      line("response_item", { type: "function_call", id: "question-1", name: "request_user_input_async", arguments: JSON.stringify({ questions: [{ title: "Which device?", options: ["Phone", "PC"] }] }) }),
+      line("response_item", { type: "message", role: "user", content: [{ type: "input_text", text: "Phone" }] }),
+      line("event_msg", { type: "user_message", message: "Phone" }),
+    ].join(""));
+    expect(state.turn.items).toEqual([
+      expect.objectContaining({ id: "question-1", type: "agentMessage", phase: "commentary", text: "Which device?\n- Phone\n- PC" }),
+      expect.objectContaining({ type: "userMessage", content: [{ type: "text", text: "Phone" }] }),
+    ]);
+  });
   test("stops exposing an interrupted turn, including after a fresh read", () => {
     const directory = mkdtempSync(join(tmpdir(), "codex-live-session-"));
     const path = join(directory, "rollout.jsonl");

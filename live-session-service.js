@@ -73,6 +73,7 @@ function newState() {
     commandCalls: new Map(),
     activeCommandId: null,
     userSequence: 0,
+    lastUser: null,
     patchSequence: 0,
     lastEventAt: null,
   };
@@ -112,6 +113,7 @@ export function applyRolloutEvent(state, event) {
     state.commandCalls.clear();
     state.activeCommandId = null;
     state.userSequence = 0;
+    state.lastUser = null;
     state.patchSequence = 0;
     state.turn = {
       id: payload.turn_id,
@@ -131,9 +133,16 @@ export function applyRolloutEvent(state, event) {
     state.activeCommandId = null;
     return state;
   }
-  if (event.type === "event_msg" && payload.type === "user_message") {
+  if ((event.type === "event_msg" && payload.type === "user_message") || (event.type === "response_item" && payload.type === "message" && payload.role === "user")) {
+    const text = (event.type === "event_msg" ? String(payload.message || "") : contentText(payload.content)).trim();
+    if (!text) return state;
+    // Some rollout formats record the same message as both an event and a response item.
+    if (state.lastUser?.text === text && state.lastUser.type !== event.type) {
+      state.lastUser = null;
+      return state;
+    }
+    state.lastUser = { text, type: event.type };
     state.userSequence += 1;
-    const text = String(payload.message || "").trim();
     // thread/read already owns the opening prompt; rollout is needed for later CLI steering messages.
     if (state.userSequence > 1 && text) {
       upsertItem(state, {
@@ -165,6 +174,20 @@ export function applyRolloutEvent(state, event) {
     return state;
   }
   if (event.type !== "response_item") return state;
+  if (payload.type === "function_call" && ["request_user_input_async", "request_user_input"].includes(payload.name)) {
+    try {
+      const questions = JSON.parse(payload.arguments || "{}").questions;
+      if (Array.isArray(questions)) {
+        const text = questions.map(q => {
+          const title = q.title || q.question || "";
+          const options = Array.isArray(q.options) ? q.options.map(o => typeof o === "string" ? o : o.label).filter(Boolean) : [];
+          return [title, ...options.map(option => `- ${option}`)].filter(Boolean).join("\n");
+        }).filter(Boolean).join("\n\n");
+        if (text) upsertItem(state, { id: payload.id || payload.call_id, type: "agentMessage", text, phase: "commentary" });
+      }
+    } catch { /* Ignore malformed tool arguments. */ }
+    return state;
+  }
   const message = messageItem(payload);
   if (message) { upsertItem(state, message); return state; }
   const reasoning = reasoningItem(payload);
