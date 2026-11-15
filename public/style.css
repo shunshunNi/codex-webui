@@ -633,7 +633,7 @@ body.sidebar-hidden .sidebar>div{opacity:0}
 .sidebar-row{height:30px;min-height:30px;border-radius:10px;color:var(--app-text-secondary);font-size:14px}
 .sidebar-row:hover,.sidebar-row:focus-within{background:var(--app-hover);color:var(--app-text)}
 .new-task{font-size:14px;font-weight:500;color:var(--app-text)}
-.sidebar-scroll{min-height:0;flex:1;overflow-y:auto;padding:16px 8px 8px;scrollbar-width:thin;scrollbar-color:var(--app-border-default) transparent}
+.sidebar-scroll{min-height:0;flex:1;overflow-y:auto;padding:4px 8px 8px;scrollbar-width:thin;scrollbar-color:var(--app-border-default) transparent}
 .projects-button{margin-bottom:8px;color:var(--app-text)}
 .projects-button .icon-slot,.projects-button .icon-slot svg{width:16px;height:16px;min-width:16px}
 .thread-list{min-height:0;overflow:visible;padding:0;scrollbar-color:var(--app-border-default) transparent}
@@ -799,3 +799,13 @@ body.sidebar-hidden .sidebar>div{opacity:0}
 .activity-group .activity-summary .activity-chevron{opacity:1}
 @keyframes activity-pulse{50%{opacity:.3}}
 @media(prefers-reduced-motion:reduce){.live-activity-dot{animation:none}}
+
+@media(max-width:720px){#effortButton{width:auto;padding:0 5px}#effortButton>span:first-child{display:inline}}
+
+.recent-directory{flex:0 0 42px;max-width:42px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--app-text-tertiary);font-size:9px}
+
+.recent-thread{padding-left:0;gap:3px}
+
+.recent-thread{height:auto;min-height:42px;padding:4px 8px;flex-direction:column;align-items:stretch;justify-content:center;gap:0}.recent-thread .thread-name{flex:none;line-height:18px}.recent-thread .recent-directory{flex:none;max-width:100%;line-height:12px}
+
+.recent-thread .recent-directory{color:#999;font-size:10px}.recent-thread .thread-name{color:var(--app-text)}
