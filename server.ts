@@ -1,3 +1,4 @@
+import { Database } from "bun:sqlite";
 import { createReadStream, existsSync, readFileSync, mkdirSync, writeFileSync, renameSync } from "node:fs";
 import { join, relative, resolve, extname } from "node:path";
 import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
@@ -67,6 +68,12 @@ const terminalSessions = new Map<WebSocket, ReturnType<typeof createTerminalSess
 const pending = new Map<number, { resolve: (value: any) => void; reject: (error: Error) => void }>();
 const reviewDiffs = new ReviewDiffStore();
 const liveSessions = new LiveSessionStore();
+const usageDir = process.env.CODEX_HOME || join(homeDir, ".codex");
+mkdirSync(usageDir, { recursive: true, mode: 0o700 });
+const usageDb = new Database(join(usageDir, "codex-webui-usage.sqlite"), { create: true });
+usageDb.run("CREATE TABLE IF NOT EXISTS thread_usage (thread_id TEXT PRIMARY KEY, usage TEXT NOT NULL)");
+const writeThreadUsage = usageDb.query("INSERT INTO thread_usage (thread_id, usage) VALUES (?, ?) ON CONFLICT(thread_id) DO UPDATE SET usage=excluded.usage");
+const readThreadUsage = usageDb.query("SELECT usage FROM thread_usage WHERE thread_id = ?");
 const threadPaths = new Map<string, string>();
 let codexSessionsRoot = resolve(homeDir, ".codex", "sessions");
 let seq = 1;
@@ -186,6 +193,12 @@ function handleCodex(message: any) {
     return;
   }
   if (message.method) {
+    if (message.method === "thread/tokenUsage/updated") {
+      const { threadId, tokenUsage } = message.params || {};
+      if (typeof threadId === "string" && threadId.length <= 200 && Number.isFinite(tokenUsage?.modelContextWindow) && tokenUsage.modelContextWindow > 0 && Number.isFinite(tokenUsage?.last?.totalTokens) && tokenUsage.last.totalTokens >= 0) {
+        try { writeThreadUsage.run(threadId, JSON.stringify(tokenUsage)); } catch (error) { console.error("Failed to save thread usage:", error); }
+      }
+    }
     if (message.method === "account/updated") accountLoader.invalidate();
     if (message.method === "turn/diff/updated") reviewDiffs.record(message.params || {});
     if (message.method === "item/fileChange/patchUpdated") recordFileChangeDiff(message.params || {});
@@ -517,6 +530,15 @@ const server = createServer(async (req, res) => {
   if (url.pathname === "/api/health") {
     res.writeHead(200, { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" });
     res.end(JSON.stringify({ ok: true, codex: connected, version: "0.2.0" }));
+    return;
+  }
+  if (url.pathname === "/api/thread-usage") {
+    if (req.method !== "GET") { sendAuthError(res, 405, "Method not allowed"); return; }
+    const threadId = url.searchParams.get("threadId") || "";
+    if (!threadId || threadId.length > 200) { sendAuthError(res, 400, "Invalid thread ID"); return; }
+    const row = readThreadUsage.get(threadId) as { usage: string } | null;
+    res.writeHead(200, { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" });
+    res.end(JSON.stringify({ usage: row ? JSON.parse(row.usage) : null }));
     return;
   }
   if (url.pathname === "/api/model-preferences") {
