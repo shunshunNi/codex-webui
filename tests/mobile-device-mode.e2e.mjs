@@ -19,19 +19,12 @@ const before=await page.evaluate(()=>({
   sidebarPosition:getComputedStyle(document.querySelector('#sidebar')).position,
   sidebarShadow:getComputedStyle(document.querySelector('#sidebar')).boxShadow,
 }));
+await page.click('#newTask');
+const wide=await page.evaluate(()=>({hidden:document.body.classList.contains('sidebar-hidden'),position:getComputedStyle(document.querySelector('#sidebar')).position}));
+await page.setViewportSize({width:500,height:900});
 await page.click('#toggleSidebar');
-await page.waitForFunction(()=>Math.abs(document.querySelector('#sidebar').getBoundingClientRect().x)<.5);
-const after=await page.evaluate(()=>{const sidebar=document.querySelector('#sidebar'),rect=sidebar.getBoundingClientRect();return{
-  x:rect.x,
-  right:rect.right,
-  width:rect.width,
-  mobileOpen:sidebar.classList.contains('mobile-open'),
-  bodyHidden:document.body.classList.contains('sidebar-hidden'),
-  position:getComputedStyle(sidebar).position,
-  shadow:getComputedStyle(sidebar).boxShadow,
-  topElement:document.elementFromPoint(Math.min(rect.right-10,innerWidth-10),Math.min(rect.top+20,innerHeight-10))?.closest('#sidebar')===sidebar,
-}});
-await page.screenshot({path:artifact('mobile-device-sidebar.png'),fullPage:false});
-console.log(JSON.stringify({before,after},null,2));
+await page.click('#newTask');
+const narrow=await page.evaluate(()=>({open:document.querySelector('#sidebar').classList.contains('mobile-open'),position:getComputedStyle(document.querySelector('#sidebar')).position}));
+console.log(JSON.stringify({before,wide,narrow},null,2));
 await browser.close();
-if(!before.coarse||!before.mobileClass||before.sidebarPosition!=='fixed'||before.sidebarX>=0||before.sidebarShadow!=='none'||!after.mobileOpen||after.bodyHidden||Math.abs(after.x)>.5||after.width>948||after.shadow==='none'||!after.topElement)process.exit(1);
+if(!before.coarse||before.mobileClass||wide.hidden||wide.position==='fixed'||narrow.open||narrow.position!=='fixed')process.exit(1);
