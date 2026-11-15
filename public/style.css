@@ -800,6 +800,11 @@ body.sidebar-hidden .sidebar>div{opacity:0}
 @keyframes activity-pulse{50%{opacity:.3}}
 @media(prefers-reduced-motion:reduce){.live-activity-dot{animation:none}}
 
+.topbar-new-button{position:absolute;left:44px;top:7px;z-index:1}
+.topbar-new-button:hover{background:var(--surface-hover);color:var(--text-strong)}
+body.sidebar-hidden .thread-heading{padding-left:84px}
+@media(max-width:720px){.thread-heading{padding-left:84px}}
+.mobile-device .thread-heading{padding-left:84px}
 @media(max-width:720px){#effortButton{width:auto;padding:0 5px}#effortButton>span:first-child{display:inline}}
 
 .recent-directory{flex:0 0 42px;max-width:42px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--app-text-tertiary);font-size:9px}
